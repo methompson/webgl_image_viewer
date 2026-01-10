@@ -261,28 +261,122 @@ class WebGLImageViewer {
   }
 
   exportAsBMP(): Blob {
-    // Ensure the image is rendered before reading pixels
-    this.render();
-
     const gl = this.gl;
-    const width = this.canvas.width;
-    const height = this.canvas.height;
 
-    // Read pixels from canvas
-    const pixels = new Uint8Array(width * height * 4);
-    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    if (!this.image) {
+      throw new Error('No image loaded');
+    }
+
+    // Calculate output dimensions at full resolution with desqueeze applied
+    const outputWidth = this.image.width;
+    const outputHeight = Math.round(this.image.height / this.desqueeze);
+
+    // Create offscreen framebuffer for full-resolution rendering
+    const framebuffer = gl.createFramebuffer();
+    const renderTexture = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, renderTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      outputWidth,
+      outputHeight,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      null,
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER,
+      gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D,
+      renderTexture,
+      0,
+    );
+
+    // Check framebuffer status
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      throw new Error('Framebuffer not complete');
+    }
+
+    // Set viewport to full resolution
+    gl.viewport(0, 0, outputWidth, outputHeight);
+
+    // Clear and render to framebuffer
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    if (!this.program) throw new Error('Program not initialized');
+    gl.useProgram(this.program);
+
+    // Bind the original image texture
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+
+    // Set uniforms for full-resolution render (no aspect ratio fitting needed)
+    const scaleLocation = gl.getUniformLocation(this.program, 'u_scale');
+    const distortionLocation = gl.getUniformLocation(
+      this.program,
+      'u_distortion',
+    );
+    const zoomLocation = gl.getUniformLocation(this.program, 'u_zoom');
+    const resolutionLocation = gl.getUniformLocation(
+      this.program,
+      'u_resolution',
+    );
+    const imageSizeLocation = gl.getUniformLocation(
+      this.program,
+      'u_imageSize',
+    );
+
+    gl.uniform2f(scaleLocation, 1.0, 1.0); // Full image, no scaling
+    gl.uniform1f(distortionLocation, this.distortion);
+    gl.uniform1f(zoomLocation, this.zoom);
+    gl.uniform2f(resolutionLocation, outputWidth, outputHeight);
+    gl.uniform2f(imageSizeLocation, this.image.width, this.image.height);
+
+    // Draw to framebuffer
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    // Read pixels from framebuffer
+    const pixels = new Uint8Array(outputWidth * outputHeight * 4);
+    gl.readPixels(
+      0,
+      0,
+      outputWidth,
+      outputHeight,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      pixels,
+    );
+
+    // Restore canvas rendering
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.render(); // Restore display
+
+    // Cleanup
+    gl.deleteTexture(renderTexture);
+    gl.deleteFramebuffer(framebuffer);
 
     // BMP rows must be padded to 4-byte boundaries
-    const bytesPerRow = width * 3;
+    const bytesPerRow = outputWidth * 3;
     const paddingPerRow = (4 - (bytesPerRow % 4)) % 4;
     const rowStride = bytesPerRow + paddingPerRow;
-    const pixelDataSize = rowStride * height;
+    const pixelDataSize = rowStride * outputHeight;
 
     // Convert RGBA to BGR (BMP format) - no vertical flip needed
     const bgrPixels = new Uint8Array(pixelDataSize);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const srcIdx = (y * width + x) * 4;
+    for (let y = 0; y < outputHeight; y++) {
+      for (let x = 0; x < outputWidth; x++) {
+        const srcIdx = (y * outputWidth + x) * 4;
         // BMP is stored bottom-to-top, WebGL reads bottom-to-top, so no flip
         const dstIdx = y * rowStride + x * 3;
         bgrPixels[dstIdx + 0] = pixels[srcIdx + 2]; // B
@@ -306,8 +400,8 @@ class WebGLImageViewer {
 
     // DIB Header (BITMAPINFOHEADER)
     view.setUint32(14, 40, true); // Header size
-    view.setInt32(18, width, true); // Width
-    view.setInt32(22, height, true); // Height
+    view.setInt32(18, outputWidth, true); // Width
+    view.setInt32(22, outputHeight, true); // Height
     view.setUint16(26, 1, true); // Planes
     view.setUint16(28, 24, true); // Bits per pixel
     view.setUint32(30, 0, true); // Compression (none)
