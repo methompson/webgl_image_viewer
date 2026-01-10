@@ -5,7 +5,7 @@ I want to use this application to modify the image in separate ways:
 * Resize/Desqueeze an anamoprhic image
 * Adjust lens distortion
 
-I want to export the image after the image has been adjusted
+I want to export the image after the image has been adjusted. The image can be low-complexity uncompressed image, like bmp or tga.
 
 ### Loading the image
 
