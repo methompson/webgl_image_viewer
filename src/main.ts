@@ -445,6 +445,11 @@ const exportBtn = document.getElementById('exportBtn') as HTMLButtonElement;
 imageInput.addEventListener('change', (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (file) {
+    // Apply current slider values to viewer before loading image
+    viewer.setDesqueeze(parseFloat(desqueezeSlider.value));
+    viewer.setDistortion(parseFloat(distortionSlider.value));
+    viewer.setZoom(parseFloat(zoomSlider.value));
+
     viewer.loadImage(file);
     exportBtn.disabled = false;
   }
