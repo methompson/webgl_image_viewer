@@ -4,20 +4,20 @@ import './style.css';
 const vertexShaderSource = `
   attribute vec2 a_position;
   attribute vec2 a_texCoord;
+  uniform vec2 u_scale;
   varying vec2 v_texCoord;
   
   void main() {
-    gl_Position = vec4(a_position, 0.0, 1.0);
+    gl_Position = vec4(a_position * u_scale, 0.0, 1.0);
     v_texCoord = a_texCoord;
   }
 `;
 
-// Fragment shader: applies desqueeze, distortion, and zoom
+// Fragment shader: applies distortion and zoom
 const fragmentShaderSource = `
   precision mediump float;
   
   uniform sampler2D u_image;
-  uniform float u_desqueeze;
   uniform float u_distortion;
   uniform float u_zoom;
   uniform vec2 u_resolution;
@@ -38,10 +38,6 @@ const fragmentShaderSource = `
       float distortionFactor = 1.0 + u_distortion * r2;
       uv = centered * distortionFactor + 0.5;
     }
-    
-    // Apply anamorphic desqueeze (vertical scaling)
-    // Scale vertically around center
-    uv.y = (uv.y - 0.5) * u_desqueeze + 0.5;
     
     // Check bounds and discard if outside
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
@@ -217,11 +213,29 @@ class WebGLImageViewer {
 
     gl.useProgram(this.program);
 
+    // Calculate scale to fit image in canvas without stretching
+    const canvasAspect = this.canvas.width / this.canvas.height;
+    const imageAspect = this.image.width / this.image.height;
+
+    let scaleX = 1.0;
+    let scaleY = 1.0;
+
+    if (imageAspect > canvasAspect) {
+      // Image is wider than canvas
+      scaleX = 1.0;
+      scaleY = canvasAspect / imageAspect;
+    } else {
+      // Image is taller than canvas
+      scaleX = imageAspect / canvasAspect;
+      scaleY = 1.0;
+    }
+
+    // Apply desqueeze to the vertical scale to change aspect ratio
+    // Divide by desqueeze to compress vertically (inverse operation)
+    scaleY /= this.desqueeze;
+
     // Set uniforms
-    const desqueezeLocation = gl.getUniformLocation(
-      this.program,
-      'u_desqueeze',
-    );
+    const scaleLocation = gl.getUniformLocation(this.program, 'u_scale');
     const distortionLocation = gl.getUniformLocation(
       this.program,
       'u_distortion',
@@ -236,7 +250,7 @@ class WebGLImageViewer {
       'u_imageSize',
     );
 
-    gl.uniform1f(desqueezeLocation, this.desqueeze);
+    gl.uniform2f(scaleLocation, scaleX, scaleY);
     gl.uniform1f(distortionLocation, this.distortion);
     gl.uniform1f(zoomLocation, this.zoom);
     gl.uniform2f(resolutionLocation, this.canvas.width, this.canvas.height);
