@@ -1,13 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>webgl_image_viewer</title>
+    <title>WebGL Image Viewer</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <canvas id="glCanvas"></canvas>
+      <div id="controls">
+        <div class="control-section">
+          <label for="imageInput">Load Image:</label>
+          <input type="file" id="imageInput" accept="image/*" />
+        </div>
+
+        <div class="control-section">
+          <label for="desqueeze">Anamorphic Desqueeze Ratio:</label>
+          <div class="control-group">
+            <input
+              type="range"
+              id="desqueeze"
+              min="1.0"
+              max="2.5"
+              step="0.01"
+              value="1.0"
+            />
+            <input
+              type="number"
+              id="desqueezeValue"
+              min="1.0"
+              max="2.5"
+              step="0.01"
+              value="1.0"
+            />
+          </div>
+        </div>
+
+        <div class="control-section">
+          <label for="distortion">Lens Distortion:</label>
+          <div class="control-group">
+            <input
+              type="range"
+              id="distortion"
+              min="-1.0"
+              max="1.0"
+              step="0.01"
+              value="0.0"
+            />
+            <input
+              type="number"
+              id="distortionValue"
+              min="-1.0"
+              max="1.0"
+              step="0.01"
+              value="0.0"
+            />
+          </div>
+          <span class="hint">(Negative = barrel, Positive = pincushion)</span>
+        </div>
+
+        <div class="control-section">
+          <label for="zoom">Zoom (Fill Black Corners):</label>
+          <div class="control-group">
+            <input
+              type="range"
+              id="zoom"
+              min="1.0"
+              max="2.0"
+              step="0.01"
+              value="1.0"
+            />
+            <input
+              type="number"
+              id="zoomValue"
+              min="1.0"
+              max="2.0"
+              step="0.01"
+              value="1.0"
+            />
+          </div>
+        </div>
+
+        <div class="control-section">
+          <button id="exportBtn">Export as BMP</button>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

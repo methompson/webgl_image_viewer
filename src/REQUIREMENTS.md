@@ -28,3 +28,5 @@ I also want an option that "zooms" into the image when distortion correction is 
 The project is currently set up to use vite to run the application.
 
 I want the UI for both sliders to change so that I can type numbers in as well as using the slider.
+
+The canvas element should remain stationary and should be sized to the window. The canvas element should not increase or decrease in size as the image gets revised.
