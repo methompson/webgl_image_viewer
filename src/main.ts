@@ -62,7 +62,7 @@ class WebGLImageViewer {
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    const gl = canvas.getContext('webgl');
+    const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true });
     if (!gl) {
       throw new Error('WebGL not supported');
     }
@@ -261,6 +261,9 @@ class WebGLImageViewer {
   }
 
   exportAsBMP(): Blob {
+    // Ensure the image is rendered before reading pixels
+    this.render();
+
     const gl = this.gl;
     const width = this.canvas.width;
     const height = this.canvas.height;
@@ -269,20 +272,28 @@ class WebGLImageViewer {
     const pixels = new Uint8Array(width * height * 4);
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
-    // Convert RGBA to BGR (BMP format) and flip vertically
-    const bgrPixels = new Uint8Array(width * height * 3);
+    // BMP rows must be padded to 4-byte boundaries
+    const bytesPerRow = width * 3;
+    const paddingPerRow = (4 - (bytesPerRow % 4)) % 4;
+    const rowStride = bytesPerRow + paddingPerRow;
+    const pixelDataSize = rowStride * height;
+
+    // Convert RGBA to BGR (BMP format) - no vertical flip needed
+    const bgrPixels = new Uint8Array(pixelDataSize);
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const srcIdx = (y * width + x) * 4;
-        const dstIdx = ((height - 1 - y) * width + x) * 3;
+        // BMP is stored bottom-to-top, WebGL reads bottom-to-top, so no flip
+        const dstIdx = y * rowStride + x * 3;
         bgrPixels[dstIdx + 0] = pixels[srcIdx + 2]; // B
         bgrPixels[dstIdx + 1] = pixels[srcIdx + 1]; // G
         bgrPixels[dstIdx + 2] = pixels[srcIdx + 0]; // R
       }
+      // Padding bytes are already 0 from Uint8Array initialization
     }
 
     // Create BMP file
-    const fileSize = 54 + bgrPixels.length;
+    const fileSize = 54 + pixelDataSize;
     const buffer = new ArrayBuffer(fileSize);
     const view = new DataView(buffer);
 
@@ -300,7 +311,7 @@ class WebGLImageViewer {
     view.setUint16(26, 1, true); // Planes
     view.setUint16(28, 24, true); // Bits per pixel
     view.setUint32(30, 0, true); // Compression (none)
-    view.setUint32(34, bgrPixels.length, true); // Image size
+    view.setUint32(34, pixelDataSize, true); // Image size with padding
     view.setInt32(38, 2835, true); // X pixels per meter
     view.setInt32(42, 2835, true); // Y pixels per meter
     view.setUint32(46, 0, true); // Colors in palette
