@@ -59,6 +59,7 @@ class WebGLImageViewer {
   private desqueeze = 1.0;
   private distortion = 0.0;
   private zoom = 1.0;
+  private backgroundColor = { r: 0, g: 0, b: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -203,12 +204,28 @@ class WebGLImageViewer {
     this.render();
   }
 
+  setBackgroundColor(color: string) {
+    // Parse hex color to RGB
+    const hex = color.replace('#', '');
+    this.backgroundColor = {
+      r: parseInt(hex.substring(0, 2), 16) / 255,
+      g: parseInt(hex.substring(2, 4), 16) / 255,
+      b: parseInt(hex.substring(4, 6), 16) / 255,
+    };
+    this.render();
+  }
+
   render() {
     if (!this.program || !this.image) return;
 
     const gl = this.gl;
 
-    gl.clearColor(0, 0, 0, 1);
+    gl.clearColor(
+      this.backgroundColor.r,
+      this.backgroundColor.g,
+      this.backgroundColor.b,
+      1,
+    );
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(this.program);
@@ -439,6 +456,7 @@ const distortionValue = document.getElementById(
 ) as HTMLInputElement;
 const zoomSlider = document.getElementById('zoom') as HTMLInputElement;
 const zoomValue = document.getElementById('zoomValue') as HTMLInputElement;
+const bgColorPicker = document.getElementById('bgColor') as HTMLInputElement;
 const exportBtn = document.getElementById('exportBtn') as HTMLButtonElement;
 
 // Image loading
@@ -498,6 +516,12 @@ zoomValue.addEventListener('input', (e) => {
     zoomSlider.value = value.toString();
     viewer.setZoom(value);
   }
+});
+
+// Background color control
+bgColorPicker.addEventListener('input', (e) => {
+  const color = (e.target as HTMLInputElement).value;
+  viewer.setBackgroundColor(color);
 });
 
 // Export
