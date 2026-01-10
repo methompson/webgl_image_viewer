@@ -15,11 +15,14 @@ The image should be displayed normally. Not flipped, rotated or mirrored.
 
 I want to be able to "desqueeze" the image using an anamorphic "squeeze ratio" value that resizes the image vertically, while maintaing the horizontal width.
 
-The number in the squeeze ratio should represent the anamorphic lens's squeeze ratio. For instance, if I shoot a picture with a lens that has a 1.6x squeeze, I want to be able to set the slider to 1.6 to unsqueeze the image based on the lens's squeeze factor
+I want the desqueeze ratio's number to represent the len's squeeze ratio so that when the user sets the value to 1.6, it unsqueeze's an image that was squeezed at a 1.6x squeeze factor.
 
 ### I want to correct lens distortion
 
 I want to be able to correct lens barrel and pincushion distortion in the image
+
+### Zoom option
+
 I also want an option that "zooms" into the image when distortion correction is used to prevent the corners from being black.
 
 The project is currently set up to use vite to run the application.
