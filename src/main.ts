@@ -524,8 +524,7 @@ bgColorPicker.addEventListener('input', (e) => {
   viewer.setBackgroundColor(color);
 });
 
-// Export
-exportBtn.addEventListener('click', () => {
+function exportImage() {
   const blob = viewer.exportAsBMP();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -533,7 +532,10 @@ exportBtn.addEventListener('click', () => {
   a.download = `exported-image-${Date.now()}.bmp`;
   a.click();
   URL.revokeObjectURL(url);
-});
+}
+
+// Export
+exportBtn.addEventListener('click', exportImage);
 
 exportBtn.disabled = true;
 
