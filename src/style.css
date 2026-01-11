@@ -255,3 +255,174 @@ button:disabled {
     background-color: #4248d6;
   }
 }
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.modal-field {
+  margin-bottom: 1.5rem;
+}
+
+.modal-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.modal-field select,
+.modal-field input[type="number"] {
+  width: 100%;
+  padding: 0.6rem;
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.87);
+  font-size: max(16px, 1rem);
+}
+
+.modal-field select:focus,
+.modal-field input[type="number"]:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.modal-field input[type="number"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.radio-label input[type="number"] {
+  flex: 1;
+  margin-left: 0.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.modal-actions button {
+  min-width: 100px;
+}
+
+.primary-btn {
+  background-color: #646cff;
+}
+
+.primary-btn:hover {
+  background-color: #535bf2;
+}
+
+.secondary-btn {
+  background-color: #444;
+}
+
+.secondary-btn:hover {
+  background-color: #555;
+}
+
+/* Light mode modal styles */
+@media (prefers-color-scheme: light) {
+  .modal-content {
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .modal-content h2 {
+    color: #213547;
+  }
+  
+  .modal-field label {
+    color: #213547;
+  }
+  
+  .modal-field select,
+  .modal-field input[type="number"] {
+    background-color: #f9f9f9;
+    border-color: #ccc;
+    color: #213547;
+  }
+  
+  .secondary-btn {
+    background-color: #e0e0e0;
+    color: #213547;
+  }
+  
+  .secondary-btn:hover {
+    background-color: #d0d0d0;
+  }
+}
+
+/* Mobile modal optimizations */
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+  }
+  
+  .modal-content h2 {
+    font-size: 1.25rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+}

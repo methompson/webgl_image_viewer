@@ -4,6 +4,9 @@ import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ['@metools/web-image-converter'],
+  },
   server: {
     port: 3000,
   },

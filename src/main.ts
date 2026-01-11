@@ -1,4 +1,5 @@
 import './style.css';
+import { ExportModal, processAndExportImage } from './export_image';
 
 // Vertex shader: positions the image quad
 const vertexShaderSource = `
@@ -59,7 +60,7 @@ class WebGLImageViewer {
   private desqueeze = 1.0;
   private distortion = 0.0;
   private zoom = 1.0;
-  private backgroundColor = { r: 0, g: 0, b: 0 };
+  private backgroundColor = { r: 1, g: 1, b: 0 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -205,6 +206,7 @@ class WebGLImageViewer {
   }
 
   setBackgroundColor(color: string) {
+    console.log('Setting background color to', color);
     // Parse hex color to RGB
     const hex = color.replace('#', '');
     this.backgroundColor = {
@@ -439,6 +441,7 @@ class WebGLImageViewer {
 // Initialize application
 const canvas = document.getElementById('glCanvas') as HTMLCanvasElement;
 const viewer = new WebGLImageViewer(canvas);
+const exportModal = new ExportModal();
 
 // Set up controls
 const imageInput = document.getElementById('imageInput') as HTMLInputElement;
@@ -524,14 +527,24 @@ bgColorPicker.addEventListener('input', (e) => {
   viewer.setBackgroundColor(color);
 });
 
-function exportImage() {
-  const blob = viewer.exportAsBMP();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `exported-image-${Date.now()}.bmp`;
-  a.click();
-  URL.revokeObjectURL(url);
+/**
+ * Grabs the blob from the viewer and triggers the export modal.
+ */
+async function exportImage() {
+  const bmpBlob = viewer.exportAsBMP();
+
+  // Show modal and get user options
+  const options = await exportModal.show();
+
+  if (options) {
+    // Call the processing function with the options
+    await processAndExportImage(
+      bmpBlob,
+      options.format,
+      options.resolution,
+      options.compression,
+    );
+  }
 }
 
 // Export
