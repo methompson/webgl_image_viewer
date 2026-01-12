@@ -8,7 +8,7 @@ export default defineConfig({
     exclude: ['@metools/web-image-converter'],
   },
   server: {
-    port: 3000,
+    port: 3001,
   },
   resolve: {
     alias: {
